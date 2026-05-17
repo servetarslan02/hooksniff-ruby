@@ -19,6 +19,14 @@ module HookSniff
     attr_accessor :message
     attr_accessor :message_attempt
     attr_accessor :statistics
+    attr_accessor :environment
+    attr_accessor :background_task
+    attr_accessor :operational_webhook
+    attr_accessor :message_poller
+    attr_accessor :inbound
+    attr_accessor :connector
+    attr_accessor :integration
+    attr_accessor :stream
 
     def initialize(auth_token, options = HookSniffOptions.new)
       uri = URI(options.server_url || "https://hooksniff-api-1046140057667.europe-west1.run.app")
@@ -31,6 +39,14 @@ module HookSniff
       @message = Message.new(api_client)
       @message_attempt = MessageAttempt.new(api_client)
       @statistics = Statistics.new(api_client)
+      @environment = Environment.new(api_client)
+      @background_task = BackgroundTask.new(api_client)
+      @operational_webhook = OperationalWebhook.new(api_client)
+      @message_poller = MessagePoller.new(api_client)
+      @inbound = Inbound.new(api_client)
+      @connector = Connector.new(api_client)
+      @integration = IntegrationApi.new(api_client)
+      @stream = StreamApi.new(api_client)
     end
   end
 end
