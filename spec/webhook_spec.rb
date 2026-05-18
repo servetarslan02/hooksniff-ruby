@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require "base64"
 
 require "hooksniff"
 
@@ -74,15 +75,17 @@ describe HookSniff::Webhook do
   end
 
   it "valid signature is valid and returns valid json" do
-    testPayload = TestPayload.new
+    testPayload = TestPayload.new(payload: '{"event":"test","data":{"test":2432232314}}')
     wh = HookSniff::Webhook.new(testPayload.secret)
 
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json[:test]).to(eq(2432232314))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event).to(be_a(HookSniff::WebhookEvent))
+    expect(event.event).to(eq("test"))
+    expect(event.get("test")).to(eq(2432232314))
   end
 
   it "valid unbranded signature is valid and returns valid json" do
-    testPayload = TestPayload.new
+    testPayload = TestPayload.new(payload: '{"event":"test","data":{"test":2432232314}}')
     unbrandedHeaders = {
       "webhook-id" => testPayload.headers["hooksniff-id"],
       "webhook-signature" => testPayload.headers["hooksniff-signature"],
@@ -92,8 +95,9 @@ describe HookSniff::Webhook do
 
     wh = HookSniff::Webhook.new(testPayload.secret)
 
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json[:test]).to(eq(2432232314))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event).to(be_a(HookSniff::WebhookEvent))
+    expect(event.get("test")).to(eq(2432232314))
   end
 
   it "old timestamp raises error" do
@@ -121,7 +125,7 @@ describe HookSniff::Webhook do
   end
 
   it "multi sig payload is valid" do
-    testPayload = TestPayload.new
+    testPayload = TestPayload.new(payload: '{"event":"test","data":{"test":2432232314}}')
     sigs = [
       "v1,Ceo5qEr07ixe2NLpvHk3FH9bwy/WavXrAFQ/9tdO6mc=",
       "v2,Ceo5qEr07ixe2NLpvHk3FH9bwy/WavXrAFQ/9tdO6mc=",
@@ -133,20 +137,21 @@ describe HookSniff::Webhook do
 
     wh = HookSniff::Webhook.new(testPayload.secret)
 
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json[:test]).to(eq(2432232314))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event).to(be_a(HookSniff::WebhookEvent))
+    expect(event.get("test")).to(eq(2432232314))
   end
 
   it "signature verification works with and without prefix" do
-    testPayload = TestPayload.new
+    testPayload = TestPayload.new(payload: '{"event":"test","data":{"test":2432232314}}')
 
     wh = HookSniff::Webhook.new(testPayload.secret)
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json[:test]).to(eq(2432232314))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event.get("test")).to(eq(2432232314))
 
     wh = HookSniff::Webhook.new("whsec_" + testPayload.secret)
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json[:test]).to(eq(2432232314))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event.get("test")).to(eq(2432232314))
   end
 
   it "sign function works" do
@@ -161,12 +166,13 @@ describe HookSniff::Webhook do
     expect(signature).to(eq(expected))
   end
 
-  it "returns empty json when payload is empty" do
+  it "returns empty event when payload is empty" do
     testPayload = TestPayload.new(payload: '')
 
     wh = HookSniff::Webhook.new(testPayload.secret)
 
-    json = wh.verify(testPayload.payload, testPayload.headers)
-    expect(json).to(eq(nil))
+    event = wh.verify(testPayload.payload, testPayload.headers)
+    expect(event).to(be_a(HookSniff::WebhookEvent))
+    expect(event.event).to(eq(""))
   end
 end

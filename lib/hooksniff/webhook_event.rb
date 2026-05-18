@@ -94,7 +94,7 @@ module HookSniff
     end
   end
 
-  # Data payload for message.atattempt.failing events.
+  # Data payload for message.attempt.failing events.
   class MessageAttemptFailingEventData
     attr_reader :app_id, :msg_id, :attempt, :app_uid
 
@@ -118,42 +118,9 @@ module HookSniff
     end
   end
 
-  # ─── Typed Event Classes ────────────────────────────────────────
-
-  # Webhook event: endpoint.created
-  class EndpointCreatedEvent < WebhookEvent; end
-
-  # Webhook event: endpoint.updated
-  class EndpointUpdatedEvent < WebhookEvent; end
-
-  # Webhook event: endpoint.deleted
-  class EndpointDeletedEvent < WebhookEvent; end
-
-  # Webhook event: endpoint.enabled
-  class EndpointEnabledEvent < WebhookEvent; end
-
-  # Webhook event: endpoint.disabled
-  class EndpointDisabledEvent < WebhookEvent; end
-
-  # Webhook event: message.attempt.exhausted
-  class MessageAttemptExhaustedEvent < WebhookEvent; end
-
-  # Webhook event: message.attempt.failing
-  class MessageAttemptFailingEvent < WebhookEvent; end
-
-  # Webhook event: message.attempt.recovered
-  class MessageAttemptRecoveredEvent < WebhookEvent; end
-
-  # ─── WebhookEvent (updated) ─────────────────────────────────────
+  # ─── WebhookEvent (base class — must come before subclasses) ────
 
   # Represents a parsed webhook event from HookSniff.
-  #
-  # @example
-  #   event = wh.verify(raw_body, headers)
-  #   puts event.event        # "endpoint.created"
-  #   puts event.data         # EndpointCreatedEventData (typed!)
-  #   puts event.data.app_id  # "app_123"
-  #   puts event.timestamp    # "2026-05-19T02:33:00Z"
   class WebhookEvent
     # @return [String] event type name (e.g., "endpoint.created")
     attr_reader :event
@@ -171,14 +138,11 @@ module HookSniff
     end
 
     # Alias for +event+ — the event type name.
-    # @return [String]
     def event_type
       @event
     end
 
     # Get a value from the data (Hash or typed object).
-    # @param key [String, Symbol]
-    # @return [Object, nil]
     def get(key)
       if @data.is_a?(Hash)
         @data[key.to_s] || @data[key.to_sym]
@@ -188,15 +152,11 @@ module HookSniff
     end
 
     # Access data values with bracket notation (backward compat).
-    # @param key [String, Symbol]
-    # @return [Object]
     def [](key)
       get(key)
     end
 
     # Check if key exists in data.
-    # @param key [String, Symbol]
-    # @return [Boolean]
     def key?(key)
       if @data.is_a?(Hash)
         @data.key?(key.to_s) || @data.key?(key.to_sym)
@@ -215,28 +175,27 @@ module HookSniff
 
     # Map of known event types to their classes
     EVENT_TYPE_MAP = {
-      "endpoint.created" => EndpointCreatedEvent,
-      "endpoint.updated" => EndpointUpdatedEvent,
-      "endpoint.deleted" => EndpointDeletedEvent,
-      "endpoint.enabled" => EndpointEnabledEvent,
-      "endpoint.disabled" => EndpointDisabledEvent,
-      "message.attempt.exhausted" => MessageAttemptExhaustedEvent,
-      "message.atattempt.failing" => MessageAttemptFailingEvent,
-      "message.attempt.failing" => MessageAttemptFailingEvent,
-      "message.atattempt.recovered" => MessageAttemptRecoveredEvent,
-      "message.attempt.recovered" => MessageAttemptRecoveredEvent,
+      "endpoint.created" => "EndpointCreatedEvent",
+      "endpoint.updated" => "EndpointUpdatedEvent",
+      "endpoint.deleted" => "EndpointDeletedEvent",
+      "endpoint.enabled" => "EndpointEnabledEvent",
+      "endpoint.disabled" => "EndpointDisabledEvent",
+      "message.attempt.exhausted" => "MessageAttemptExhaustedEvent",
+      "message.attempt.failing" => "MessageAttemptFailingEvent",
+      "message.atattempt.failing" => "MessageAttemptFailingEvent",
+      "message.attempt.recovered" => "MessageAttemptRecoveredEvent",
+      "message.atattempt.recovered" => "MessageAttemptRecoveredEvent",
     }.freeze
 
     # Parse a webhook payload hash into a typed WebhookEvent.
-    # @param data [Hash] parsed JSON payload with 'event', 'data', 'timestamp' keys
-    # @return [WebhookEvent] typed subclass instance
     def self.parse(data)
       event_type = data[:event] || data["event"] || data[:eventType] || data["eventType"] || ""
       raw_data = data[:data] || data["data"] || {}
       timestamp = data[:timestamp] || data["timestamp"] || ""
 
       parsed_data = parse_event_data(event_type, raw_data)
-      event_class = EVENT_TYPE_MAP[event_type] || WebhookEvent
+      class_name = EVENT_TYPE_MAP[event_type]
+      event_class = class_name ? const_get(class_name) : WebhookEvent
 
       event_class.new(event: event_type, data: parsed_data, timestamp: timestamp)
     end
@@ -322,4 +281,15 @@ module HookSniff
       )
     end
   end
+
+  # ─── Typed Event Subclasses ─────────────────────────────────────
+
+  class EndpointCreatedEvent < WebhookEvent; end
+  class EndpointUpdatedEvent < WebhookEvent; end
+  class EndpointDeletedEvent < WebhookEvent; end
+  class EndpointEnabledEvent < WebhookEvent; end
+  class EndpointDisabledEvent < WebhookEvent; end
+  class MessageAttemptExhaustedEvent < WebhookEvent; end
+  class MessageAttemptFailingEvent < WebhookEvent; end
+  class MessageAttemptRecoveredEvent < WebhookEvent; end
 end

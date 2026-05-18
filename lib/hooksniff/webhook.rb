@@ -1,6 +1,13 @@
 # frozen_string_literal: true
+require "base64"
+require "json"
 
 module HookSniff
+  # Error raised when webhook signature verification fails
+  class WebhookVerificationError < StandardError; end
+  # Error raised when webhook signing fails
+  class WebhookSigningError < StandardError; end
+
   class Webhook
 
     def self.new_using_raw_bytes(secret)

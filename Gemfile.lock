@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    svix (1.93.0)
+    hooksniff (1.2.0)
       base64 (~> 0.3.0)
       logger (~> 1.0)
 
@@ -45,11 +45,11 @@ PLATFORMS
 
 DEPENDENCIES
   base64
+  hooksniff!
   logger
   ostruct
   rake (~> 13.0)
   rspec (~> 3.2)
-  svix!
   webmock (~> 3.25)
 
 BUNDLED WITH
