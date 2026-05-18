@@ -148,3 +148,18 @@ module HookSniff
     attr_accessor :last_response
   end
 end
+
+# Debug logging helper
+module HookSniff
+  module DebugLogger
+    def self.log_request(method, url)
+      return unless HookSniff.respond_to?(:debug) && HookSniff.debug
+      puts "[HookSniff] → #{method.upcase} #{url}"
+    end
+
+    def self.log_response(status_code, elapsed_ms)
+      return unless HookSniff.respond_to?(:debug) && HookSniff.debug
+      puts "[HookSniff] ← #{status_code} (#{elapsed_ms}ms)"
+    end
+  end
+end
