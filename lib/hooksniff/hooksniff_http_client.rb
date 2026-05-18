@@ -83,26 +83,41 @@ module HookSniff
     end
 
     private def execute_request_with_retries(request, http)
-      res = http.request(request)
+      res = nil
+      retries = [1, 2, 4] # seconds: 1s, 2s, 4s exponential backoff
+      max_retries = retries.length
 
-      [0.05, 0.1, 0.2].each_with_index do |sleep_duration, index|
+      retries.each_with_index do |sleep_duration, index|
+        begin
+          res = http.request(request)
+        rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, Timeout::Error, Errno::ETIMEDOUT, IOError => _e
+          # Timeout — retry
+          if index < max_retries - 1
+            sleep(sleep_duration)
+            request["hooksniff-retry-count"] = index + 1
+            next
+          else
+            raise
+          end
+        end
+
         # 429 Rate Limit — respect Retry-After header
         if Integer(res.code) == 429
           retry_after = res["Retry-After"]
           delay = retry_after ? retry_after.to_f : sleep_duration
           sleep(delay)
           request["hooksniff-retry-count"] = index + 1
-          res = http.request(request)
           next
         end
 
-        unless Integer(res.code) >= 500
-          break
+        # 5xx Server Error — exponential backoff
+        if Integer(res.code) >= 500 && index < max_retries - 1
+          sleep(sleep_duration)
+          request["hooksniff-retry-count"] = index + 1
+          next
         end
 
-        sleep(sleep_duration)
-        request["hooksniff-retry-count"] = index + 1
-        res = http.request(request)
+        break
       end
 
       res
