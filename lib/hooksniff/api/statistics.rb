@@ -20,18 +20,5 @@ module HookSniff
       )
       AggregateEventTypesOut.deserialize(res)
     end
-
-    def app_stats(app_id, options = {})
-      options = options.transform_keys(&:to_s)
-      res = @client.execute_request(
-        "GET",
-        "/v1/stats/app/#{app_id}",
-        query_params: {
-          "since" => options["since"],
-          "until" => options["until"]
-        }
-      )
-      res
-    end
   end
 end
