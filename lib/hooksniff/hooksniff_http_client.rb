@@ -47,7 +47,9 @@ module HookSniff
       # Create request object
       request = request_class.new(uri.request_uri)
       request["Authorization"] = "Bearer #{@token}"
-      request["User-Agent"] = "hooksniff-libs/#{VERSION}/ruby"
+      sdk_ua = "hooksniff-libs/#{VERSION}/ruby"
+      request["User-Agent"] = sdk_ua
+      request["X-HookSniff-SDK"] = sdk_ua
       request["hooksniff-req-id"] = rand(0...(2 ** 64))
 
       # Add headers
