@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.name          = "hooksniff"
   spec.version       = HookSniff::VERSION
   spec.authors       = ["HookSniff"]
-  spec.email         = ["support@hooksniff.vercel.app"]
+  spec.email         = ["servetarslan02@gmail.com"]
   spec.license       = "MIT"
 
   spec.summary       = "HookSniff webhooks API client and webhook verification library"
