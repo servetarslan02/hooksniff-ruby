@@ -6,6 +6,7 @@ require "hooksniff/api_error"
 require "hooksniff/errors"
 require "hooksniff/util"
 require "hooksniff/webhook_event"
+require "hooksniff/response_metadata"
 require "hooksniff/webhook"
 
 # Original resources

@@ -141,3 +141,10 @@ module HookSniff
     end
   end
 end
+
+# Response metadata accessor
+module HookSniff
+  class << self
+    attr_accessor :last_response
+  end
+end
