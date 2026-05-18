@@ -157,4 +157,104 @@ class TypedWebhookEventTest < Minitest::Test
     )
     assert_instance_of HookSniff::EndpointEnabledEvent, event
   end
+
+  def test_unicode_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "ünïcödé", endpointId: "日本語" },
+      timestamp: ""
+    )
+    assert_equal "ünïcödé", event.data.app_id
+    assert_equal "日本語", event.data.endpoint_id
+  end
+
+  def test_large_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "a" * 10000, endpointId: "e" * 10000 },
+      timestamp: ""
+    )
+    assert_equal 10000, event.data.app_id.length
+  end
+
+  def test_special_characters
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "a@b.c", endpointId: "e#1" },
+      timestamp: ""
+    )
+    assert_equal "a@b.c", event.data.app_id
+  end
+
+  def test_trigger_none
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.disabled",
+      data: { appId: "a", endpointId: "e", trigger: "none" },
+      timestamp: ""
+    )
+    assert_equal "none", event.data.trigger
+  end
+
+  def test_trigger_first_failure
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.disabled",
+      data: { appId: "a", endpointId: "e", trigger: "first-failure" },
+      timestamp: ""
+    )
+    assert_equal "first-failure", event.data.trigger
+  end
+
+  def test_all_event_types
+    %w[endpoint.created endpoint.updated endpoint.deleted endpoint.enabled endpoint.disabled
+       message.attempt.exhausted message.attempt.failing message.attempt.recovered].each do |et|
+      event = HookSniff::WebhookEvent.parse(event: et, data: { appId: "a" }, timestamp: "")
+      assert_equal et, event.event
+    end
+  end
+
+  def test_get_with_symbol_key
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "a1" },
+      timestamp: ""
+    )
+    assert_equal "a1", event.get(:appId)
+  end
+
+  def test_bracket_with_symbol
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "a1" },
+      timestamp: ""
+    )
+    assert_equal "a1", event[:appId]
+  end
+
+  def test_key_with_symbol
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "a1" },
+      timestamp: ""
+    )
+    assert event.key?(:appId)
+  end
+
+  def test_to_s
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: {},
+      timestamp: "2026-05-19"
+    )
+    assert_match(/EndpointCreatedEvent/, event.to_s)
+    assert_match(/2026-05-19/, event.to_s)
+  end
+
+  def test_inspect
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: {},
+      timestamp: "2026-05-19"
+    )
+    assert_equal event.to_s, event.inspect
+  end
 end
