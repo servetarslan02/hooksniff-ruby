@@ -127,3 +127,71 @@ module HookSniff
     end
   end
 end
+
+  # 408 Request Timeout
+  class RequestTimeoutError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 408, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # 410 Gone
+  class GoneError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 410, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # 413 Payload Too Large
+  class PayloadTooLargeError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 413, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # 501 Not Implemented
+  class NotImplementedError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 501, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # 507 Insufficient Storage
+  class InsufficientStorageError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 507, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # 508 Loop Detected
+  class LoopDetectedError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 508, response_headers: response_headers, response_body: response_body)
+    end
+  end
+
+  # Timeout — request exceeded the configured timeout
+  class TimeoutError < StandardError
+    attr_reader :code
+    def initialize(message = "Request timeout")
+      @code = 0
+      super(message)
+    end
+  end
+
+  # Network error — connection failed
+  class NetworkError < StandardError
+    attr_reader :code
+    def initialize(message = "Network error")
+      @code = 0
+      super(message)
+    end
+  end
+
+  # Authentication error — token invalid, expired, or missing
+  class AuthenticationError < ApiError
+    def initialize(response_headers: {}, response_body: nil)
+      super(code: 401, response_headers: response_headers, response_body: response_body)
+    end
+  end
+end
