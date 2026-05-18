@@ -195,7 +195,7 @@ module HookSniff
 
       parsed_data = parse_event_data(event_type, raw_data)
       class_name = EVENT_TYPE_MAP[event_type]
-      event_class = class_name ? const_get(class_name) : WebhookEvent
+      event_class = class_name ? ::HookSniff.const_get(class_name) : WebhookEvent
 
       event_class.new(event: event_type, data: parsed_data, timestamp: timestamp)
     end
