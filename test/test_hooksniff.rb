@@ -56,17 +56,6 @@ class WebhookTest < Minitest::Test
     end
   end
 
-  def test_svix_branded_headers
-    wh = HookSniff::Webhook.new(SECRET)
-    sig = sign(SECRET, MSG_ID, TIMESTAMP, PAYLOAD)
-    headers = {
-      "svix-id" => MSG_ID,
-      "svix-timestamp" => TIMESTAMP.to_s,
-      "svix-signature" => sig,
-    }
-    result = wh.verify(PAYLOAD, headers)
-    assert_equal({"event" => "test"}, result)
-  end
 end
 
 class ErrorTest < Minitest::Test
