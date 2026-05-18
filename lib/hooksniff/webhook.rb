@@ -15,7 +15,55 @@ module HookSniff
       @secret = Base64.decode64(secret)
     end
 
+    # Verify and parse a webhook payload.
+    #
+    # Verifies the HMAC-SHA256 signature, then parses the payload
+    # into a typed WebhookEvent with +event+, +data+, and +timestamp+.
+    #
+    # @param payload [String] raw request body
+    # @param headers [Hash] request headers containing hooksniff-id, hooksniff-timestamp, hooksniff-signature
+    # @return [WebhookEvent] parsed webhook event
+    # @raise [WebhookVerificationError] if signature is invalid or timestamp is outside tolerance
     def verify(payload, headers)
+      msgId = headers["hooksniff-id"]
+      msgSignature = headers["hooksniff-signature"]
+      msgTimestamp = headers["hooksniff-timestamp"]
+      if !msgSignature || !msgId || !msgTimestamp
+        msgId = headers["webhook-id"]
+        msgSignature = headers["webhook-signature"]
+        msgTimestamp = headers["webhook-timestamp"]
+        if !msgSignature || !msgId || !msgTimestamp
+          raise WebhookVerificationError, "Missing required headers"
+        end
+      end
+
+      verify_timestamp(msgTimestamp)
+
+      _, signature = sign(msgId, msgTimestamp, payload).split(",", 2)
+
+      passedSignatures = msgSignature.split(" ")
+      passedSignatures.each do |versionedSignature|
+        version, expectedSignature = versionedSignature.split(",", 2)
+        if version != "v1"
+          next
+        end
+
+        if ::HookSniff::secure_compare(signature, expectedSignature)
+          return parse_payload(payload)
+        end
+      end
+
+      raise WebhookVerificationError, "No matching signature found"
+    end
+
+    # Verify and return raw payload without parsing.
+    # Use this when you need the raw hash instead of a typed event.
+    #
+    # @param payload [String] raw request body
+    # @param headers [Hash] request headers
+    # @return [Hash, nil] parsed JSON hash
+    # @raise [WebhookVerificationError] if signature is invalid
+    def verify_raw(payload, headers)
       msgId = headers["hooksniff-id"]
       msgSignature = headers["hooksniff-signature"]
       msgTimestamp = headers["hooksniff-timestamp"]
@@ -79,6 +127,13 @@ module HookSniff
       if timestamp > (now + TOLERANCE)
         raise WebhookVerificationError, "Message timestamp too new"
       end
+    end
+
+    def parse_payload(payload)
+      return WebhookEvent.new(event: "", data: {}, timestamp: "") if payload.empty?
+
+      parsed = JSON.parse(payload, symbolize_names: true)
+      WebhookEvent.parse(parsed)
     end
   end
 end
