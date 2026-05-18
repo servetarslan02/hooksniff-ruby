@@ -89,4 +89,72 @@ class TypedWebhookEventTest < Minitest::Test
     assert_equal "a1", event.data.app_id
     assert_equal "e1", event.data.endpoint_id
   end
+
+  def test_empty_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: {},
+      timestamp: ""
+    )
+    assert_equal "", event.data.app_id
+  end
+
+  def test_missing_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      timestamp: ""
+    )
+    assert_equal "", event.data.app_id
+  end
+
+  def test_unknown_event_keeps_raw_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "custom.unknown",
+      data: { "x" => 1 },
+      timestamp: ""
+    )
+    assert_instance_of HookSniff::WebhookEvent, event
+    assert_equal 1, event.get("x")
+  end
+
+  def test_unicode_data
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.created",
+      data: { appId: "ünïcödé", endpointId: "日本語" },
+      timestamp: ""
+    )
+    assert_equal "ünïcödé", event.data.app_id
+    assert_equal "日本語", event.data.endpoint_id
+  end
+
+  def test_event_type_map_count
+    assert_equal 10, HookSniff::WebhookEvent::EVENT_TYPE_MAP.size
+  end
+
+  def test_endpoint_updated
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.updated",
+      data: { appId: "a1", endpointId: "e1" },
+      timestamp: ""
+    )
+    assert_instance_of HookSniff::EndpointUpdatedEvent, event
+  end
+
+  def test_endpoint_deleted
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.deleted",
+      data: { appId: "a1", endpointId: "e1" },
+      timestamp: ""
+    )
+    assert_instance_of HookSniff::EndpointDeletedEvent, event
+  end
+
+  def test_endpoint_enabled
+    event = HookSniff::WebhookEvent.parse(
+      event: "endpoint.enabled",
+      data: { appId: "a1", endpointId: "e1" },
+      timestamp: ""
+    )
+    assert_instance_of HookSniff::EndpointEnabledEvent, event
+  end
 end
