@@ -5,7 +5,7 @@
   <a href="https://rubygems.org/gems/hooksniff"><img src="https://img.shields.io/gems/v/hooksniff" alt="Gem"></a>
 </p>
 
-Ruby SDK for the [HookSniff](https://hooksniff.com) webhook delivery platform.
+Ruby SDK for the [HookSniff](https://hooksniff.vercel.app) webhook delivery platform.
 
 ## Installation
 
@@ -71,6 +71,6 @@ payload = wh.verify(body, headers)
 
 ## Links
 
-- [Documentation](https://docs.hooksniff.com)
-- [API Reference](https://api.hooksniff.com)
+- [Documentation](https://hooksniff.vercel.app/docs)
+- [API Reference](https://hooksniff-api-1046140057667.europe-west1.run.app)
 - [GitHub](https://github.com/servetarslan02/HookSniff)
