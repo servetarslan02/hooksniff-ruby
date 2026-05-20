@@ -62,5 +62,18 @@ module HookSniff
       @client.execute_request("DELETE", "/v1/event-types/#{event_type_name}")
       nil
     end
+
+    def import_openapi(event_type_import_open_api_in, options = {})
+      options = options.transform_keys(&:to_s)
+      res = @client.execute_request(
+        "POST",
+        "/v1/event-types/import-openapi",
+        headers: {
+          "idempotency-key" => options["idempotency-key"]
+        },
+        body: event_type_import_open_api_in
+      )
+      EventTypeImportOpenApiOut.deserialize(res)
+    end
   end
 end
