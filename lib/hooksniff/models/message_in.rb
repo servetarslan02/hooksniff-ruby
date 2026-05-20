@@ -80,14 +80,14 @@ module HookSniff
       out = Hash.new
       out["application"] = HookSniff::serialize_schema_ref(@application) if @application
       out["channels"] = HookSniff::serialize_primitive(@channels) if @channels
-      out["deliverAt"] = HookSniff::serialize_primitive(@deliver_at) if @deliver_at
-      out["eventId"] = HookSniff::serialize_primitive(@event_id) if @event_id
-      out["eventType"] = HookSniff::serialize_primitive(@event_type) if @event_type
-      out["payload"] = HookSniff::serialize_primitive(@payload) if @payload
-      out["payloadRetentionHours"] = HookSniff::serialize_primitive(@payload_retention_hours) if @payload_retention_hours
-      out["payloadRetentionPeriod"] = HookSniff::serialize_primitive(@payload_retention_period) if @payload_retention_period
+      out["deliver_at"] = HookSniff::serialize_primitive(@deliver_at) if @deliver_at
+      out["event_id"] = HookSniff::serialize_primitive(@event_id) if @event_id
+      out["event"] = HookSniff::serialize_primitive(@event_type) if @event_type
+      out["data"] = HookSniff::serialize_primitive(@payload) if @payload
+      out["payload_retention_hours"] = HookSniff::serialize_primitive(@payload_retention_hours) if @payload_retention_hours
+      out["payload_retention_period"] = HookSniff::serialize_primitive(@payload_retention_period) if @payload_retention_period
       out["tags"] = HookSniff::serialize_primitive(@tags) if @tags
-      out["transformationsParams"] = HookSniff::serialize_primitive(@transformations_params) if @transformations_params
+      out["transformations_params"] = HookSniff::serialize_primitive(@transformations_params) if @transformations_params
       out
     end
 
